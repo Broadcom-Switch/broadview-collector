@@ -280,6 +280,63 @@ class BSTToStacklight(BroadViewSerializerBase):
                 m["value"] = y.getUcBufferCount()
                 ret.append(m)
 
+        d = data.getCongestionTopDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["entity"] = "broadview-bst" 
+                m["name"] = repr(x)
+                m["timestamp"] = timestamp
+                m["asic-id"] = asic
+                m["bv-agent"] = host
+                m["port"] = y.getPort()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+        d = data.getCongestionTopPortQueueDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["entity"] = "broadview-bst" 
+                m["name"] = repr(x)
+                m["timestamp"] = timestamp
+                m["asic-id"] = asic
+                m["bv-agent"] = host
+                m["port"] = y.getPort()
+                m["queue-type"] = y.getQueueType()
+                m["queue"] = y.getQueue()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+
+        d = data.getCongestionPortDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["entity"] = "broadview-bst" 
+                m["name"] = repr(x)
+                m["timestamp"] = timestamp
+                m["asic-id"] = asic
+                m["bv-agent"] = host
+                m["port"] = y.getPort()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+        d = data.getCongestionPortQueueDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["entity"] = "broadview-bst" 
+                m["name"] = repr(x)
+                m["timestamp"] = timestamp
+                m["asic-id"] = asic
+                m["bv-agent"] = host
+                m["port"] = y.getPort()
+                m["queue-type"] = y.getQueueType()
+                m["queue"] = y.getQueue()
+                m["value"] = y.getCount()
+                ret.append(m)
+
         return json.dumps(ret)
 
     def _toReport(self, host, data):
@@ -291,6 +348,8 @@ class BSTToStacklight(BroadViewSerializerBase):
     def _toThreshold(self, host, data):
         return self.__serializeToJSON(host, "bst-thresholds", data)
 
+    def _toDropCounters(self, host, data):
+        return self.__serializeToJSON(host, "bst-congestion-drop-counters", data)
     def serialize(self, host, data):
         # serialize a parsed BST report to Monasca mtrics
         ret = (False, None)
@@ -304,6 +363,8 @@ class BSTToStacklight(BroadViewSerializerBase):
             s = self._toTrigger(host, data)
         elif rpt == ReportTypes.Threshold:
             s = self._toThreshold(host, data)
+        elif rpt == ReportTypes.CongestionDropCounters:
+            s = self._toDropCounters(host, data)
 
         if s:
             ret = (True, s)
@@ -849,6 +910,101 @@ class TestSerializer(unittest.TestCase):
                 }]
         }
 
+        self.top_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "top-drops",
+                "data": [{
+                    "port": "2",
+                    "data": 8500
+                    }, {
+                    "port": "8",
+                    "data": 7550
+                    }, {
+                    "port": "6",
+                    "data": 6500
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.port_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "port-drops",
+                "data": [{
+                    "port": "2",
+                    "data": 8500
+                    }, {
+                    "port": "8",
+                    "data": 7550
+                    }, {
+                    "port": "6",
+                    "data": 6500
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.top_port_queue_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "top-port-queue-drops",
+                "data": [
+                    {
+                        "port": "1",
+                        "queue-type": "ucast",
+                        "data": [[1,8500],[2,8400], [3,156000]]
+                    }, {
+                        "port": "2",
+                        "queue-type": "mcast",
+                        "data": [[1,600],[2,400], [3,1000]]
+                    }, {
+                        "port": "3",
+                        "queue-type": "ucast",
+                        "data": [[1,500],[2,800], [3,56000]]
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.port_queue_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "port-queue-drops",
+                "data": [
+                    {
+                        "port": "1",
+                        "queue-type": "ucast",
+                        "data": [[1,8500],[2,8400], [3,156000]]
+                    }, {
+                        "port": "2",
+                        "queue-type": "mcast",
+                        "data": [[1,600],[2,400], [3,1000]]
+                    }, {
+                        "port": "3",
+                        "queue-type": "ucast",
+                        "data": [[1,500],[2,800], [3,56000]]
+                    }]
+            }],
+            "id": 1
+        }
 
     def test_bst_report1(self):
         rep = BSTParser()
@@ -2247,6 +2403,182 @@ class TestSerializer(unittest.TestCase):
                     self.assertTrue(x["metric"] == True)
             else:
                 self.assertTrue(x["queue-group"] == True)
+
+    def test_topDrops(self):
+        rep = BSTParser()
+        rep.process(self.top_drops)
+        serializer = BSTToStacklight()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 3)
+        i = 0
+        y = self.top_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["entity"], "broadview-bst")
+            self.assertEqual(x["name"], "top-drops")
+            self.assertEqual(x["asic-id"], y["asic-id"])
+            self.assertTrue("port" in x)
+            if x["port"] == "2":
+                self.assertTrue(x["value"] == 8500)
+            elif x["port"] == "8":
+                self.assertTrue(x["value"] == 7550)
+            elif x["port"] == "6":
+                self.assertTrue(x["value"] == 6500)
+            else:
+                self.assertEqual("unrecognized port", x["port"])
+
+    def test_portDrops(self):
+        rep = BSTParser()
+        rep.process(self.port_drops)
+        serializer = BSTToStacklight()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 3)
+        i = 0
+        y = self.port_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["entity"], "broadview-bst")
+            self.assertEqual(x["name"], "port-drops")
+            self.assertEqual(x["asic-id"], y["asic-id"])
+            self.assertTrue("port" in x)
+            if x["port"] == "2":
+                self.assertTrue(x["value"] == 8500)
+            elif x["port"] == "8":
+                self.assertTrue(x["value"] == 7550)
+            elif x["port"] == "6":
+                self.assertTrue(x["value"] == 6500)
+            else:
+                self.assertEqual("unrecognized port", x["port"])
+
+    def test_topPortQueueDrops(self):
+        rep = BSTParser()
+        rep.process(self.top_port_queue_drops)
+        serializer = BSTToStacklight()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 9)
+        i = 0
+        y = self.top_port_queue_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["entity"], "broadview-bst")
+            self.assertEqual(x["name"], "top-port-queue-drops")
+            self.assertEqual(x["asic-id"], y["asic-id"])
+            self.assertTrue("port" in x)
+            if x["port"] == "1" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8500)
+            elif x["port"] == "1" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8400)
+            elif x["port"] == "1" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 156000)
+            elif x["port"] == "2" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 600)
+            elif x["port"] == "2" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 400)
+            elif x["port"] == "2" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 1000)
+            elif x["port"] == "3" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 500)
+            elif x["port"] == "3" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 800)
+            elif x["port"] == "3" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 56000)
+            else:
+                self.assertEqual("unrecognized entry", x)
+
+
+    def test_portQueueDrops(self):
+        rep = BSTParser()
+        rep.process(self.port_queue_drops)
+        serializer = BSTToStacklight()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 9)
+        i = 0
+        y = self.port_queue_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["entity"], "broadview-bst")
+            self.assertEqual(x["name"], "port-queue-drops")
+            self.assertEqual(x["asic-id"], y["asic-id"])
+            self.assertTrue("port" in x)
+            if x["port"] == "1" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8500)
+            elif x["port"] == "1" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8400)
+            elif x["port"] == "1" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 156000)
+            elif x["port"] == "2" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 600)
+            elif x["port"] == "2" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 400)
+            elif x["port"] == "2" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 1000)
+            elif x["port"] == "3" and x["queue"] == 1:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 500)
+            elif x["port"] == "3" and x["queue"] == 2:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 800)
+            elif x["port"] == "3" and x["queue"] == 3:
+                self.assertTrue(x["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 56000)
+            else:
+                self.assertEqual("unrecognized entry", x)
+
 
 if __name__ == "__main__":
     unittest.main()

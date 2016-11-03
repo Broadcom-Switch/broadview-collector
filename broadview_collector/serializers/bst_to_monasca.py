@@ -282,6 +282,63 @@ class BSTToMonasca(BroadViewSerializerBase):
                 m["value"] = y.getUcBufferCount()
                 ret.append(m)
 
+        d = data.getCongestionTopDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["name"] = "broadview.bst." + repr(x)
+                m["timestamp"] = timestamp
+                m["dimensions"] = {}
+                m["dimensions"]["asic-id"] = asic
+                m["dimensions"]["bv-agent"] = host
+                m["dimensions"]["port"] = y.getPort()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+        d = data.getCongestionTopPortQueueDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["name"] = "broadview.bst." + repr(x)
+                m["timestamp"] = timestamp
+                m["dimensions"] = {}
+                m["dimensions"]["asic-id"] = asic
+                m["dimensions"]["bv-agent"] = host
+                m["dimensions"]["port"] = y.getPort()
+                m["dimensions"]["queue-type"] = y.getQueueType()
+                m["dimensions"]["queue"] = y.getQueue()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+
+        d = data.getCongestionPortDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["name"] = "broadview.bst." + repr(x)
+                m["timestamp"] = timestamp
+                m["dimensions"] = {}
+                m["dimensions"]["asic-id"] = asic
+                m["dimensions"]["bv-agent"] = host
+                m["dimensions"]["port"] = y.getPort()
+                m["value"] = y.getCount()
+                ret.append(m)
+
+        d = data.getCongestionPortQueueDrops()
+        for x in d:
+            for y in x:
+                m = {}
+                m["name"] = "broadview.bst." + repr(x)
+                m["timestamp"] = timestamp
+                m["dimensions"] = {}
+                m["dimensions"]["asic-id"] = asic
+                m["dimensions"]["bv-agent"] = host
+                m["dimensions"]["port"] = y.getPort()
+                m["dimensions"]["queue-type"] = y.getQueueType()
+                m["dimensions"]["queue"] = y.getQueue()
+                m["value"] = y.getCount()
+                ret.append(m)
+
         return json.dumps(ret)
 
     def _toReport(self, host, data):
@@ -292,6 +349,9 @@ class BSTToMonasca(BroadViewSerializerBase):
 
     def _toThreshold(self, host, data):
         return self.__serializeToJSON(host, "bst-thresholds", data)
+
+    def _toDropCounters(self, host, data):
+        return self.__serializeToJSON(host, "bst-congestion-drop-counters", data)
 
     def serialize(self, host, data):
         # serialize a parsed BST report to Monasca metrics
@@ -306,6 +366,8 @@ class BSTToMonasca(BroadViewSerializerBase):
             s = self._toTrigger(host, data)
         elif rpt == ReportTypes.Threshold:
             s = self._toThreshold(host, data)
+        elif rpt == ReportTypes.CongestionDropCounters:
+            s = self._toDropCounters(host, data)
 
         if s:
             ret = (True, s)
@@ -851,6 +913,101 @@ class TestSerializer(unittest.TestCase):
                 }]
         }
 
+        self.top_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "top-drops",
+                "data": [{
+                    "port": "2",
+                    "data": 8500
+                    }, {
+                    "port": "8",
+                    "data": 7550
+                    }, {
+                    "port": "6",
+                    "data": 6500
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.port_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "port-drops",
+                "data": [{
+                    "port": "2",
+                    "data": 8500
+                    }, {
+                    "port": "8",
+                    "data": 7550
+                    }, {
+                    "port": "6",
+                    "data": 6500
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.top_port_queue_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "top-port-queue-drops",
+                "data": [
+                    {
+                        "port": "1",
+                        "queue-type": "ucast",
+                        "data": [[1,8500],[2,8400], [3,156000]]
+                    }, {
+                        "port": "2",
+                        "queue-type": "mcast",
+                        "data": [[1,600],[2,400], [3,1000]]
+                    }, {
+                        "port": "3",
+                        "queue-type": "ucast",
+                        "data": [[1,500],[2,800], [3,56000]]
+                    }]
+            }],
+            "id": 1
+        }
+
+        self.port_queue_drops = {
+            "jsonrpc": "2.0",
+            "method": "get-bst-congestion-drop-counters",
+            "asic-id": "1",
+            "version": "3",
+            "time-stamp": "2016-01-01 - 00:15:04 ",
+            "report": [{
+                "report-type": "port-queue-drops",
+                "data": [
+                    {
+                        "port": "1",
+                        "queue-type": "ucast",
+                        "data": [[1,8500],[2,8400], [3,156000]]
+                    }, {
+                        "port": "2",
+                        "queue-type": "mcast",
+                        "data": [[1,600],[2,400], [3,1000]]
+                    }, {
+                        "port": "3",
+                        "queue-type": "ucast",
+                        "data": [[1,500],[2,800], [3,56000]]
+                    }]
+            }],
+            "id": 1
+        }
 
     def test_bst_report1(self):
         rep = BSTParser()
@@ -875,7 +1032,6 @@ class TestSerializer(unittest.TestCase):
         dim = data["dimensions"]
         self.assertTrue("asic-id" in dim)
         self.assertEqual(dim["asic-id"], self.bst_report1["asic-id"])
-
 
     def test_bst_report2(self):
         rep = BSTParser()
@@ -2213,6 +2369,185 @@ class TestSerializer(unittest.TestCase):
                     self.assertTrue(dim["stat"] == True)
             else:
                 self.assertTrue(dim["queue-group"] == True)
+
+    def test_topDrops(self):
+        rep = BSTParser()
+        rep.process(self.top_drops)
+        serializer = BSTToMonasca()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 3)
+        i = 0
+        y = self.top_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            self.assertTrue("dimensions" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["name"], "broadview.bst.top-drops")
+            dim = x["dimensions"]
+            self.assertEqual(dim["asic-id"], y["asic-id"])
+            self.assertTrue("port" in dim)
+            if dim["port"] == "2":
+                self.assertTrue(x["value"] == 8500)
+            elif dim["port"] == "8":
+                self.assertTrue(x["value"] == 7550)
+            elif dim["port"] == "6":
+                self.assertTrue(x["value"] == 6500)
+            else:
+                self.assertEqual("unrecognized port", dim["port"])
+
+    def test_portDrops(self):
+        rep = BSTParser()
+        rep.process(self.port_drops)
+        serializer = BSTToMonasca()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 3)
+        i = 0
+        y = self.port_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            self.assertTrue("dimensions" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["name"], "broadview.bst.port-drops")
+            dim = x["dimensions"]
+            self.assertEqual(dim["asic-id"], y["asic-id"])
+            self.assertTrue("port" in dim)
+            if dim["port"] == "2":
+                self.assertTrue(x["value"] == 8500)
+            elif dim["port"] == "8":
+                self.assertTrue(x["value"] == 7550)
+            elif dim["port"] == "6":
+                self.assertTrue(x["value"] == 6500)
+            else:
+                self.assertEqual("unrecognized port", dim["port"])
+
+    def test_topPortQueueDrops(self):
+        rep = BSTParser()
+        rep.process(self.top_port_queue_drops)
+        serializer = BSTToMonasca()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 9)
+        i = 0
+        y = self.top_port_queue_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            self.assertTrue("dimensions" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["name"], "broadview.bst.top-port-queue-drops")
+            dim = x["dimensions"]
+            self.assertEqual(dim["asic-id"], y["asic-id"])
+            self.assertTrue("port" in dim)
+            if dim["port"] == "1" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8500)
+            elif dim["port"] == "1" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8400)
+            elif dim["port"] == "1" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 156000)
+            elif dim["port"] == "2" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 600)
+            elif dim["port"] == "2" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 400)
+            elif dim["port"] == "2" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 1000)
+            elif dim["port"] == "3" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 500)
+            elif dim["port"] == "3" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 800)
+            elif dim["port"] == "3" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 56000)
+            else:
+                self.assertEqual("unrecognized entry", dim)
+
+
+    def test_portQueueDrops(self):
+        rep = BSTParser()
+        rep.process(self.port_queue_drops)
+        serializer = BSTToMonasca()
+        ret = serializer.serialize(self._host, rep)
+        self.assertEqual(ret[0], True)
+        data = json.loads(ret[1])
+        self.assertTrue(len(data) == 9)
+        i = 0
+        y = self.port_queue_drops
+        for x in data:
+            i = i + 1
+            self.assertTrue("timestamp" in x)
+            x["timestamp"] = x["timestamp"] / 1000
+            self.assertTrue("name" in x)
+            self.assertTrue("value" in x)
+            self.assertTrue("dimensions" in x)
+            t1 = datetime.datetime.fromtimestamp(int(x["timestamp"]))
+            t1 = t1.strftime("%Y-%m-%d - %H:%M:%S")
+            t2 = y["time-stamp"].strip()
+            self.assertEqual(t1, t2)
+            self.assertEqual(x["name"], "broadview.bst.port-queue-drops")
+            dim = x["dimensions"]
+            self.assertEqual(dim["asic-id"], y["asic-id"])
+            self.assertTrue("port" in dim)
+            if dim["port"] == "1" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8500)
+            elif dim["port"] == "1" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 8400)
+            elif dim["port"] == "1" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 156000)
+            elif dim["port"] == "2" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 600)
+            elif dim["port"] == "2" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 400)
+            elif dim["port"] == "2" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "mcast")
+                self.assertTrue(x["value"] == 1000)
+            elif dim["port"] == "3" and dim["queue"] == 1:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 500)
+            elif dim["port"] == "3" and dim["queue"] == 2:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 800)
+            elif dim["port"] == "3" and dim["queue"] == 3:
+                self.assertTrue(dim["queue-type"] == "ucast")
+                self.assertTrue(x["value"] == 56000)
+            else:
+                self.assertEqual("unrecognized entry", dim)
 
 if __name__ == "__main__":
     unittest.main()
